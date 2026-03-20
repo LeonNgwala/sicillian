@@ -115,9 +115,10 @@ export default function Contact() {
 
             {/* Team */}
             <div className="p-6 rounded-2xl bg-[#1B2A4A] text-white">
-              <p className="text-white/50 text-xs uppercase tracking-wider mb-4">
+              <p className="text-white/50 text-xs uppercase tracking-wider mb-1">
                 Built by
               </p>
+              <p className="text-[#0D9488] font-bold text-lg mb-4">Team GambitX</p>
               <div className="space-y-3">
                 <div>
                   <div className="font-semibold">Bantu-Bethu Beya</div>
@@ -131,8 +132,20 @@ export default function Contact() {
                     Frontend & UI — Next.js
                   </div>
                 </div>
+                <div>
+                  <div className="font-semibold">Acxellent Mthombeni</div>
+                  <div className="text-[#0D9488] text-sm">
+                    Team GambitX
+                  </div>
+                </div>
+                <div>
+                  <div className="font-semibold">Thapelo Sithole</div>
+                  <div className="text-[#0D9488] text-sm">
+                    Team GambitX
+                  </div>
+                </div>
                 <div className="pt-2 border-t border-white/10 text-white/40 text-xs">
-                  Nelson Mandela University · Bay Software · Gqeberha
+                  Nelson Mandela University · GambitX · Gqeberha
                 </div>
               </div>
             </div>
