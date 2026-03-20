@@ -1,8 +1,12 @@
 from django.urls import path
 from .views import (
-    RegisterView, LoginView, MeView,
-    UserListCreate, UserDetail,
-    InstitutionListCreate, InstitutionDetail,
+    # Auth
+    LearnerRegisterView, OrgRegisterView, LoginView, MeView,
+    # Org verification
+    PendingOrganisationsView, ApproveOrganisationView, RejectOrganisationView,
+    # Resources
+    UserListView, UserDetailView,
+    OrganisationListView, OrganisationDetailView,
     LearnerProfileListCreate, LearnerProfileDetail,
     OpportunityListCreate, OpportunityDetail,
     ApplicationListCreate, ApplicationDetail,
@@ -11,36 +15,36 @@ from .views import (
 )
 
 urlpatterns = [
-    # Auth
-    path('auth/register/', RegisterView.as_view(), name='register'),
+    # ── Auth ──────────────────────────────────────────────────────────────────
+    path('auth/register/learner/', LearnerRegisterView.as_view(), name='register-learner'),
+    path('auth/register/organisation/', OrgRegisterView.as_view(), name='register-org'),
     path('auth/login/', LoginView.as_view(), name='login'),
     path('auth/me/', MeView.as_view(), name='me'),
 
-    # Users (SETA admin)
-    path('users/', UserListCreate.as_view(), name='user-list-create'),
-    path('users/<int:pk>/', UserDetail.as_view(), name='user-detail'),
+    # ── Organisation verification (SETA admin) ─────────────────────────────────
+    path('admin/organisations/pending/', PendingOrganisationsView.as_view(), name='orgs-pending'),
+    path('admin/organisations/<int:pk>/approve/', ApproveOrganisationView.as_view(), name='org-approve'),
+    path('admin/organisations/<int:pk>/reject/', RejectOrganisationView.as_view(), name='org-reject'),
 
-    # Institutions
-    path('institutions/', InstitutionListCreate.as_view(), name='institution-list-create'),
-    path('institutions/<int:pk>/', InstitutionDetail.as_view(), name='institution-detail'),
+    # ── Resources ──────────────────────────────────────────────────────────────
+    path('users/', UserListView.as_view(), name='user-list'),
+    path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
 
-    # LearnerProfiles
-    path('learner-profiles/', LearnerProfileListCreate.as_view(), name='learner-profile-list-create'),
+    path('organisations/', OrganisationListView.as_view(), name='org-list'),
+    path('organisations/<int:pk>/', OrganisationDetailView.as_view(), name='org-detail'),
+
+    path('learner-profiles/', LearnerProfileListCreate.as_view(), name='learner-profile-list'),
     path('learner-profiles/<int:pk>/', LearnerProfileDetail.as_view(), name='learner-profile-detail'),
 
-    # Opportunities
-    path('opportunities/', OpportunityListCreate.as_view(), name='opportunity-list-create'),
+    path('opportunities/', OpportunityListCreate.as_view(), name='opportunity-list'),
     path('opportunities/<int:pk>/', OpportunityDetail.as_view(), name='opportunity-detail'),
 
-    # Applications
-    path('applications/', ApplicationListCreate.as_view(), name='application-list-create'),
+    path('applications/', ApplicationListCreate.as_view(), name='application-list'),
     path('applications/<int:pk>/', ApplicationDetail.as_view(), name='application-detail'),
 
-    # Matches
-    path('matches/', MatchListCreate.as_view(), name='match-list-create'),
+    path('matches/', MatchListCreate.as_view(), name='match-list'),
     path('matches/<int:pk>/', MatchDetail.as_view(), name='match-detail'),
 
-    # GapAlerts
-    path('gap-alerts/', GapAlertListCreate.as_view(), name='gap-alert-list-create'),
+    path('gap-alerts/', GapAlertListCreate.as_view(), name='gap-alert-list'),
     path('gap-alerts/<int:pk>/', GapAlertDetail.as_view(), name='gap-alert-detail'),
 ]

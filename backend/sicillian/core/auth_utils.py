@@ -8,6 +8,7 @@ def generate_token(user):
         'user_id': user.id,
         'role': user.role,
         'email': user.email,
+        'account_status': user.account_status,
         'exp': datetime.now(tz=timezone.utc) + timedelta(days=1),
         'iat': datetime.now(tz=timezone.utc),
     }

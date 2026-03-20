@@ -1,42 +1,74 @@
 from django.db import models
 
-# Create your models here.
 
 class User(models.Model):
     ROLES_CHOICES = [
         ('Learner', 'Learner'),
         ('Employer', 'Employer'),
         ('Institution', 'Institution'),
-        ('SETA', 'SETA')
+        ('Incubator', 'Incubator'),
+        ('SETA', 'SETA'),
+    ]
+    ACCOUNT_STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('pending', 'Pending'),
+        ('suspended', 'Suspended'),
     ]
 
-    email = models.CharField(max_length=50, null=True, blank=True)
-    password_hash = models.CharField(max_length=100, null=True, blank=True)
+    email = models.EmailField(max_length=255, unique=True)
+    password_hash = models.CharField(max_length=255)
     role = models.CharField(max_length=20, choices=ROLES_CHOICES)
-    first_name = models.CharField(max_length=20, null=True, blank=True)
-    phone = models.CharField(max_length=20)
-
+    first_name = models.CharField(max_length=50, null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    account_status = models.CharField(
+        max_length=20, choices=ACCOUNT_STATUS_CHOICES, default='active'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return f"{self.email} ({self.role})"
 
 
-class Institution(models.Model):
-    INSTITUTION_TYPE = [
+class OrganisationProfile(models.Model):
+    ORG_TYPE_CHOICES = [
+        ('employer', 'Employer'),
+        ('institution', 'Institution'),
+        ('incubator', 'Incubator'),
+        ('seta', 'SETA'),
+    ]
+    INSTITUTION_TYPE_CHOICES = [
         ('university', 'University'),
         ('tvet', 'TVET'),
         ('training_body', 'Training Body'),
     ]
+    PAYMENT_STATUS_CHOICES = [
+        ('unpaid', 'Unpaid'),
+        ('paid', 'Paid'),
+    ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, null=True, blank=True)
-    type = models.CharField(max_length=20, choices=INSTITUTION_TYPE)
-    district = models.CharField(max_length=100)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='organisation')
+    org_type = models.CharField(max_length=20, choices=ORG_TYPE_CHOICES)
+    company_name = models.CharField(max_length=255)
+    registration_number = models.CharField(max_length=100, null=True, blank=True)
+    contact_person = models.CharField(max_length=100, null=True, blank=True)
+    use_case = models.TextField(null=True, blank=True)
+    district = models.CharField(max_length=100, null=True, blank=True)
+    # Only populated when org_type == 'institution'
+    institution_type = models.CharField(
+        max_length=20, choices=INSTITUTION_TYPE_CHOICES, null=True, blank=True
+    )
+    payment_status = models.CharField(
+        max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid'
+    )
+    verified_at = models.DateTimeField(null=True, blank=True)
+    verified_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='verified_orgs'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name if self.name else f"Institution {self.id}"
+        return f"{self.company_name} ({self.org_type})"
 
 
 class LearnerProfile(models.Model):
@@ -46,16 +78,16 @@ class LearnerProfile(models.Model):
         ('training', 'Training'),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='learner_profile')
     institution = models.ForeignKey(
-        'Institution', on_delete=models.SET_NULL, null=True, blank=True
+        OrganisationProfile, on_delete=models.SET_NULL, null=True, blank=True
     )
     district = models.CharField(max_length=100)
     nqf_level = models.CharField(max_length=10)
     qualification = models.CharField(max_length=100)
-    skills = models.JSONField()
+    skills = models.JSONField(default=list)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='searching')
-    updated_at = models.DateTimeField(auto_now=True)   
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Profile for {self.user.email}"
@@ -67,7 +99,6 @@ class Opportunity(models.Model):
         ('internship', 'Internship'),
         ('job', 'Job'),
     ]
-
     STATUS_CHOICES = [
         ('open', 'Open'),
         ('closed', 'Closed'),
@@ -79,7 +110,7 @@ class Opportunity(models.Model):
     type = models.CharField(max_length=20, choices=OPPORTUNITY_TYPE)
     district = models.CharField(max_length=100)
     nqf_required = models.IntegerField()
-    skills_required = models.JSONField()
+    skills_required = models.JSONField(default=list)
     stipend = models.IntegerField(null=True, blank=True)
     spots_available = models.IntegerField(default=1)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
@@ -88,7 +119,7 @@ class Opportunity(models.Model):
 
     def __str__(self):
         return self.title
-    
+
 
 class Application(models.Model):
     STATUS_CHOICES = [
@@ -97,7 +128,6 @@ class Application(models.Model):
         ('accepted', 'Accepted'),
         ('declined', 'Declined'),
     ]
-
     CHANNEL_CHOICES = [
         ('app', 'App'),
         ('ussd', 'USSD'),
@@ -127,7 +157,6 @@ class GapAlert(models.Model):
         ('high_gap', 'High Gap'),
         ('ready_to_scale', 'Ready to Scale'),
     ]
-
     STATUS_CHOICES = [
         ('open', 'Open'),
         ('actioned', 'Actioned'),
@@ -140,4 +169,4 @@ class GapAlert(models.Model):
     learners_placed = models.IntegerField(default=0)
     detail = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
-    created_at = models.DateTimeField(auto_now_add=True)    
+    created_at = models.DateTimeField(auto_now_add=True)

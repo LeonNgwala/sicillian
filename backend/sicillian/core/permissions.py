@@ -1,6 +1,13 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
+class IsActiveAccount(BasePermission):
+    message = 'Your account is pending verification or has been suspended.'
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.account_status == 'active')
+
+
 class IsLearner(BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.role == 'Learner')
@@ -14,6 +21,11 @@ class IsEmployer(BasePermission):
 class IsInstitution(BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.role == 'Institution')
+
+
+class IsIncubator(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.role == 'Incubator')
 
 
 class IsSETA(BasePermission):
@@ -31,25 +43,30 @@ class IsInstitutionOrSETA(BasePermission):
         return bool(request.user and request.user.role in ('Institution', 'SETA'))
 
 
-class IsSETAOrReadOnlyForInstitution(BasePermission):
-    """SETA can do anything; Institution can only read."""
+class IsSETAOrReadOnly(BasePermission):
+    """SETA full access; Institution/Incubator read-only."""
     def has_permission(self, request, view):
         if not request.user:
             return False
         if request.user.role == 'SETA':
             return True
-        if request.user.role == 'Institution' and request.method in SAFE_METHODS:
+        if request.user.role in ('Institution', 'Incubator') and request.method in SAFE_METHODS:
             return True
         return False
 
 
 class IsOwnerOrSETA(BasePermission):
-    """Object-level: owner (by user field) or SETA."""
+    """Object-level: the object's owner or a SETA user."""
     def has_object_permission(self, request, view, obj):
         if request.user.role == 'SETA':
             return True
-        owner = getattr(obj, 'user', getattr(obj, 'learner', getattr(obj, 'employer', None)))
-        if hasattr(owner, 'user'):
-            # obj.learner is a LearnerProfile → get its user
-            return owner.user == request.user
+        # obj.user  →  User directly on the object
+        # obj.learner → LearnerProfile → .user
+        # obj.employer → User directly
+        owner = getattr(obj, 'user', None) \
+            or getattr(obj, 'employer', None)
+        if owner is None:
+            learner = getattr(obj, 'learner', None)
+            if learner:
+                owner = learner.user
         return owner == request.user
