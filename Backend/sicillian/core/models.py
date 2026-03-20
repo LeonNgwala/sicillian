@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from core.models import LearnerProfile, Opportunity, institution
+from core.models import LearnerProfile, Opportunity, Institution, Application, Match, GapAlert
 from core.models import User
 
 
@@ -61,7 +61,7 @@ class LearnerProfile(models.Model):
 
 
 
-class opportunity(models.Model):
+class Opportunity(models.Model):
     OPPORTUNITY_TYPE = [
         ('learnership', 'Learnership'),
         ('internship', 'Internship'),
@@ -90,7 +90,7 @@ class opportunity(models.Model):
         return self.title
     
 
-class application(models.Model):
+class Application(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('reviewed', 'Reviewed'),
@@ -110,9 +110,9 @@ class application(models.Model):
     applied_at = models.DateTimeField(auto_now_add=True)
 
 
-class match:
+class Match:
     learner = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE)
-    opportunity = models.ForeignKey(opportunity, on_delete=models.CASCADE)
+    opportunity = models.ForeignKey(Opportunity, on_delete=models.CASCADE)
     fit_score = models.IntegerField()
     ai_reason = models.TextField()
     matched_at = models.DateTimeField(auto_now_add=True)
