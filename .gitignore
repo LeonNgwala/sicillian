@@ -1,11 +1,41 @@
+# Node
+node_modules/
+.next/
+.turbo/
+dist/
+build/
+*.tsbuildinfo
+.npm
+.yarn
+
+# Python
 **/__pycache__/
 *.pyc
 *.pyo
 *.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+db.sqlite3
+media/
+
+# Env
 .env
-*.sqlite3
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/build/
+.env.local
+.env.*.local
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Docs
+doc/
+docs/
+
+# IDE
+.vscode/
+.idea/
