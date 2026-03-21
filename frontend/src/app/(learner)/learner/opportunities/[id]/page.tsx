@@ -1,11 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import PageWrapper from "@/components/dashboard/PageWrapper";
 import StatusBadge from "@/components/dashboard/StatusBadge";
-import { ArrowLeft, Building2, MapPin, Calendar, Briefcase, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Calendar, Briefcase, CheckCircle2, MessageSquare, X } from "lucide-react";
 
 const opportunityData: Record<string, {
   id: string;
@@ -81,9 +82,16 @@ export default function OpportunityDetailPage() {
   const id = typeof params.id === "string" ? params.id : "opp-1";
   const opp = opportunityData[id] ?? { ...fallbackOpportunity, id };
 
+  const [applied, setApplied] = useState(false);
+  const [modal,   setModal]   = useState(false);
+
+  function handleApply() {
+    setApplied(true);
+    setModal(true);
+  }
+
   return (
     <>
-      <DashboardHeader title="Opportunity Detail" userName="Amahle Dlamini" notificationCount={3} />
       <PageWrapper>
         <Link href="/learner/opportunities" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 mb-6">
           <ArrowLeft size={15} /> Back to Opportunities
@@ -135,12 +143,19 @@ export default function OpportunityDetailPage() {
                   <p className="text-sm font-semibold text-slate-900">{opp.salary}</p>
                 </div>
               )}
-              <button
-                className="w-full py-3 rounded-sm text-sm font-semibold text-slate-900 mb-3 transition-opacity hover:opacity-90"
-                style={{ background: "linear-gradient(90deg, #34d399, #22d3ee)" }}
-              >
-                Apply Now
-              </button>
+              {applied ? (
+                <div className="w-full py-3 rounded-sm text-sm font-semibold text-center text-emerald-700 bg-emerald-50 border border-emerald-200 mb-3 flex items-center justify-center gap-2">
+                  <CheckCircle2 size={15} /> Applied
+                </div>
+              ) : (
+                <button
+                  onClick={handleApply}
+                  className="w-full py-3 rounded-sm text-sm font-semibold text-slate-900 mb-3 transition-opacity hover:opacity-90"
+                  style={{ background: "linear-gradient(90deg, #34d399, #22d3ee)" }}
+                >
+                  Apply Now
+                </button>
+              )}
               <button className="w-full py-2.5 rounded-sm text-sm font-medium border border-slate-200 text-slate-600 hover:border-slate-300 transition-colors">
                 Save for Later
               </button>
@@ -151,6 +166,43 @@ export default function OpportunityDetailPage() {
           </div>
         </div>
       </PageWrapper>
+
+      {/* SMS modal */}
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setModal(false)} />
+          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6 flex flex-col items-center text-center gap-4 z-10">
+            <button onClick={() => setModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+              <X size={16} />
+            </button>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg,#34d399,#22d3ee)" }}>
+              <MessageSquare size={28} className="text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-slate-900 mb-1">Application submitted!</p>
+              <p className="text-sm text-slate-500">
+                Your application for <span className="font-semibold text-slate-700">{opp.title}</span> at{" "}
+                <span className="font-semibold text-slate-700">{opp.organisation}</span> has been received.
+              </p>
+            </div>
+            <div className="w-full bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 flex items-center gap-3">
+              <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
+              <div className="text-left">
+                <p className="text-xs font-semibold text-emerald-700">SMS confirmation sent</p>
+                <p className="text-xs text-emerald-600 mt-0.5">A confirmation SMS has been sent to your registered number.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setModal(false)}
+              className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ background: "linear-gradient(90deg,#34d399,#22d3ee)" }}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

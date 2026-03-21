@@ -243,8 +243,15 @@ class OrganisationDetailView(generics.RetrieveUpdateAPIView):
 # ── LearnerProfiles ───────────────────────────────────────────────────────────
 
 class LearnerProfileListCreate(generics.ListCreateAPIView):
-    queryset = LearnerProfile.objects.all()
     serializer_class = LearnerProfileSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        # Learners only see their own profile
+        if user.role == 'Learner':
+            return LearnerProfile.objects.filter(user=user)
+        # Employers, SETA, Institution, Incubator, SuperAdmin see all
+        return LearnerProfile.objects.all()
 
     def get_permissions(self):
         if self.request.method == 'POST':

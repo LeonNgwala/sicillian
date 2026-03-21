@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wifi, WifiOff } from "lucide-react";
+import { WifiOff, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const tabs = [
   { label: "My matches",   href: "/learner/matches" },
+  { label: "Opportunities",href: "/learner/opportunities" },
   { label: "Applications", href: "/learner/applications" },
   { label: "My profile",   href: "/learner/profile" },
   { label: "Skills",       href: "/learner/skills" },
@@ -14,7 +15,7 @@ const tabs = [
 
 export default function LearnerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const initials = user?.first_name ? user.first_name.slice(0, 2).toUpperCase() : "??";
 
   return (
@@ -36,10 +37,20 @@ export default function LearnerLayout({ children }: { children: React.ReactNode 
                 <p className="text-xs text-gray-400">{user?.email}</p>
               </div>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-300 text-amber-600 bg-amber-50 text-xs font-medium">
-              <WifiOff size={11} />
-              Working offline
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-300 text-amber-600 bg-amber-50 text-xs font-medium">
+                <WifiOff size={11} />
+                Working offline
+              </span>
+              <button
+                onClick={logout}
+                title="Sign out"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-200 text-gray-500 hover:border-red-300 hover:text-red-500 bg-white text-xs font-medium transition-colors"
+              >
+                <LogOut size={11} />
+                Sign out
+              </button>
+            </div>
           </div>
 
           {/* Tab bar */}

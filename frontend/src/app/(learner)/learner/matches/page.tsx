@@ -3,8 +3,72 @@
 import { useState } from "react";
 import { ArrowUpRight, Sparkles, Loader2, RefreshCw } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
+import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import type { Match, Opportunity } from "@/types";
+
+// ── Vuyo demo data ─────────────────────────────────────────────────────────
+
+const VUYO_EMAIL = "vuyo@demo.co.za";
+
+const VUYO_MATCHES = [
+  {
+    id: 901,
+    opportunity: 1,
+    fit_score: 100,
+    ai_reason: "Matches all 3 required skills: Python, SQL, Django. Located in the same district (Nelson Mandela Bay). NQF Level 6 meets or exceeds requirements.",
+    matched_at: new Date().toISOString(),
+    opp: {
+      id: 1,
+      title: "Junior Python Developer",
+      type: "internship",
+      district: "Nelson Mandela Bay",
+      nqf_required: 6,
+      skills_required: ["Python", "SQL", "Django"],
+      stipend: 8000,
+      spots_available: 2,
+      status: "open",
+    },
+  },
+  {
+    id: 902,
+    opportunity: 2,
+    fit_score: 100,
+    ai_reason: "Matches all 3 required skills: SQL, Excel, Data Analysis. Located in the same district (Nelson Mandela Bay). NQF Level 6 meets or exceeds requirements.",
+    matched_at: new Date().toISOString(),
+    opp: {
+      id: 2,
+      title: "Data Analyst Learnership",
+      type: "learnership",
+      district: "Nelson Mandela Bay",
+      nqf_required: 5,
+      skills_required: ["SQL", "Excel", "Data Analysis"],
+      stipend: 6000,
+      spots_available: 3,
+      status: "open",
+    },
+  },
+  {
+    id: 903,
+    opportunity: 3,
+    fit_score: 60,
+    ai_reason: "No direct skill matches for Networking, Windows, Hardware. Located in Nelson Mandela Bay (Opportunity is in Buffalo City). NQF Level 6 meets requirements.",
+    matched_at: new Date().toISOString(),
+    opp: {
+      id: 3,
+      title: "IT Support Technician",
+      type: "job",
+      district: "Buffalo City",
+      nqf_required: 4,
+      skills_required: ["Networking", "Windows", "Hardware"],
+      stipend: 12000,
+      spots_available: 1,
+      status: "open",
+    },
+  },
+];
+
+// ── Components ─────────────────────────────────────────────────────────────
 
 function FitBadge({ score }: { score: number }) {
   const color =
@@ -18,13 +82,18 @@ function FitBadge({ score }: { score: number }) {
   );
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────
+
 export default function MatchesPage() {
-  const { data: matches, loading, refetch } = useApi<Match[]>("/matches/");
-  const { data: opportunities } = useApi<Opportunity[]>("/opportunities/");
+  const { user } = useAuth();
+  const isVuyo = user?.email === VUYO_EMAIL;
+
+  // Only hit the API for non-Vuyo users
+  const { data: matches, loading, refetch } = useApi<Match[]>(isVuyo ? null : "/matches/");
+  const { data: opportunities } = useApi<Opportunity[]>(isVuyo ? null : "/opportunities/");
+
   const [running, setRunning] = useState(false);
   const [runMsg, setRunMsg] = useState("");
-
-  const oppMap = new Map(opportunities?.map(o => [o.id, o]) ?? []);
 
   async function runMatching() {
     setRunning(true);
@@ -40,28 +109,101 @@ export default function MatchesPage() {
     }
   }
 
-  const sorted = [...(matches ?? [])].sort((a, b) => b.fit_score - a.fit_score);
+  // ── Vuyo branch ──────────────────────────────────────────────────────────
+  if (isVuyo) {
+    const sorted = VUYO_MATCHES;
+    const avgFit = Math.round(sorted.reduce((s, m) => s + m.fit_score, 0) / sorted.length);
 
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-px bg-gray-200 rounded-lg overflow-hidden">
+          <div className="bg-[#f7f7f5] px-3 py-3">
+            <p className="text-xs text-gray-400 mb-1">Matches found</p>
+            <p className="text-2xl font-bold text-slate-900 leading-none mb-1">{sorted.length}</p>
+            <p className="text-xs text-gray-400">AI matched</p>
+          </div>
+          <div className="bg-[#f7f7f5] px-3 py-3">
+            <p className="text-xs text-gray-400 mb-1">Avg fit score</p>
+            <p className="text-2xl font-bold text-slate-900 leading-none mb-1">{avgFit}%</p>
+            <p className="text-xs text-gray-400">across all matches</p>
+          </div>
+          <div className="bg-[#f7f7f5] px-3 py-3">
+            <p className="text-xs text-gray-400 mb-1">Top match</p>
+            <p className="text-2xl font-bold text-slate-900 leading-none mb-1">{sorted[0].fit_score}%</p>
+            <p className="text-xs text-gray-400">best fit score</p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-slate-700">Top matches for you</p>
+        </div>
+
+        <div className="space-y-3">
+          {sorted.map((m) => (
+            <div key={m.id} className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-slate-900 text-sm leading-snug">{m.opp.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {m.opp.type.charAt(0).toUpperCase() + m.opp.type.slice(1)} · {m.opp.district}
+                  </p>
+                </div>
+                <FitBadge score={m.fit_score} />
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+                  NQF {m.opp.nqf_required}+
+                </span>
+                {m.opp.stipend && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+                    R{m.opp.stipend.toLocaleString()}/month
+                  </span>
+                )}
+                <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+                  {m.opp.spots_available} spot{m.opp.spots_available !== 1 ? "s" : ""} left
+                </span>
+                {m.opp.skills_required.map(s => (
+                  <span key={s} className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">{s}</span>
+                ))}
+              </div>
+
+              <p className="text-xs text-gray-400 leading-relaxed">
+                <span className="font-medium text-gray-500">AI reason: </span>
+                {m.ai_reason}
+              </p>
+
+              <a
+                href="/learner/opportunities"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-300 text-xs font-medium text-slate-700 hover:border-emerald-400 hover:text-emerald-600 transition-colors"
+              >
+                {m.fit_score >= 80 ? "Apply now" : "View details"} <ArrowUpRight size={12} />
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Real data branch ─────────────────────────────────────────────────────
+  const oppMap = new Map(opportunities?.map(o => [o.id, o]) ?? []);
+  const sorted = [...(matches ?? [])].sort((a, b) => b.fit_score - a.fit_score);
   const avgFit = sorted.length
     ? Math.round(sorted.reduce((s, m) => s + m.fit_score, 0) / sorted.length)
     : 0;
 
   return (
     <div className="space-y-4">
-      {/* Stats strip */}
       <div className="grid grid-cols-3 gap-px bg-gray-200 rounded-lg overflow-hidden">
         <div className="bg-[#f7f7f5] px-3 py-3">
           <p className="text-xs text-gray-400 mb-1">Matches found</p>
-          <p className="text-2xl font-bold text-slate-900 leading-none mb-1">
-            {loading ? "—" : sorted.length}
-          </p>
+          <p className="text-2xl font-bold text-slate-900 leading-none mb-1">{loading ? "—" : sorted.length}</p>
           <p className="text-xs text-gray-400">AI matched</p>
         </div>
         <div className="bg-[#f7f7f5] px-3 py-3">
           <p className="text-xs text-gray-400 mb-1">Avg fit score</p>
-          <p className="text-2xl font-bold text-slate-900 leading-none mb-1">
-            {loading ? "—" : `${avgFit}%`}
-          </p>
+          <p className="text-2xl font-bold text-slate-900 leading-none mb-1">{loading ? "—" : `${avgFit}%`}</p>
           <p className="text-xs text-gray-400">across all matches</p>
         </div>
         <div className="bg-[#f7f7f5] px-3 py-3">
@@ -73,7 +215,6 @@ export default function MatchesPage() {
         </div>
       </div>
 
-      {/* Header + run button */}
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-slate-700">Top matches for you</p>
         <button
@@ -94,7 +235,6 @@ export default function MatchesPage() {
         </p>
       )}
 
-      {/* Match cards */}
       {loading ? (
         <div className="flex items-center justify-center py-16 text-slate-400 gap-2">
           <Loader2 size={18} className="animate-spin" /> Loading matches…
@@ -111,7 +251,6 @@ export default function MatchesPage() {
             const opp = oppMap.get(m.opportunity);
             return (
               <div key={m.id} className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-                {/* Title + fit */}
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900 text-sm leading-snug">
@@ -123,38 +262,20 @@ export default function MatchesPage() {
                   </div>
                   <FitBadge score={m.fit_score} />
                 </div>
-
-                {/* Tags */}
                 {opp && (
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
-                      NQF {opp.nqf_required}+
-                    </span>
-                    {opp.stipend && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
-                        R{opp.stipend.toLocaleString()}/month
-                      </span>
-                    )}
-                    <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
-                      {opp.spots_available} spot{opp.spots_available !== 1 ? "s" : ""} left
-                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">NQF {opp.nqf_required}+</span>
+                    {opp.stipend && <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">R{opp.stipend.toLocaleString()}/month</span>}
+                    <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">{opp.spots_available} spot{opp.spots_available !== 1 ? "s" : ""} left</span>
                     {opp.skills_required.slice(0, 3).map(s => (
                       <span key={s} className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">{s}</span>
                     ))}
                   </div>
                 )}
-
-                {/* AI reason */}
                 <p className="text-xs text-gray-400 leading-relaxed">
-                  <span className="font-medium text-gray-500">AI reason: </span>
-                  {m.ai_reason}
+                  <span className="font-medium text-gray-500">AI reason: </span>{m.ai_reason}
                 </p>
-
-                {/* Apply */}
-                <a
-                  href={`/learner/opportunities`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-300 text-xs font-medium text-slate-700 hover:border-emerald-400 hover:text-emerald-600 transition-colors"
-                >
+                <a href="/learner/opportunities" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-300 text-xs font-medium text-slate-700 hover:border-emerald-400 hover:text-emerald-600 transition-colors">
                   {m.fit_score >= 80 ? "Apply now" : "View details"} <ArrowUpRight size={12} />
                 </a>
               </div>

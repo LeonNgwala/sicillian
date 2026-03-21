@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password, check_password
-from .models import User, OrganisationProfile, LearnerProfile, Opportunity, Application, Match, GapAlert
+from .models import User, OrganisationProfile, LearnerProfile, Opportunity, Application, Match, GapAlert, Tenant
 
 
 # ── User ──────────────────────────────────────────────────────────────────────
@@ -25,6 +25,25 @@ class LearnerRegisterSerializer(serializers.Serializer):
     qualification = serializers.CharField(max_length=100)
     skills = serializers.ListField(child=serializers.CharField(), default=list)
     institution_id = serializers.IntegerField(required=False, allow_null=True)
+    # B-BBEE / demographics (optional at registration)
+    race = serializers.ChoiceField(
+        choices=['black_african','coloured','indian','asian','white','other','prefer_not_to_say'],
+        required=False, allow_null=True,
+    )
+    gender = serializers.ChoiceField(
+        choices=['male','female','non_binary','prefer_not_to_say'],
+        required=False, allow_null=True,
+    )
+    disability = serializers.ChoiceField(
+        choices=['yes','no','prefer_not_to_say'],
+        required=False, allow_null=True,
+    )
+    nationality = serializers.ChoiceField(
+        choices=['south_african','permanent_resident','refugee_permit','other'],
+        required=False, allow_null=True,
+    )
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    id_number = serializers.CharField(max_length=20, required=False, allow_blank=True, allow_null=True)
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -42,10 +61,16 @@ class LearnerRegisterSerializer(serializers.Serializer):
     def create(self, validated_data):
         institution_id = validated_data.pop('institution_id', None)
         profile_fields = {
-            'district': validated_data.pop('district'),
-            'nqf_level': validated_data.pop('nqf_level'),
+            'district':     validated_data.pop('district'),
+            'nqf_level':    validated_data.pop('nqf_level'),
             'qualification': validated_data.pop('qualification'),
-            'skills': validated_data.pop('skills'),
+            'skills':       validated_data.pop('skills'),
+            'race':         validated_data.pop('race', None),
+            'gender':       validated_data.pop('gender', None),
+            'disability':   validated_data.pop('disability', None),
+            'nationality':  validated_data.pop('nationality', None),
+            'date_of_birth': validated_data.pop('date_of_birth', None),
+            'id_number':    validated_data.pop('id_number', None),
         }
         user = User.objects.create(
             email=validated_data['email'],
@@ -158,7 +183,9 @@ class LearnerProfileSerializer(serializers.ModelSerializer):
         model = LearnerProfile
         fields = [
             'id', 'user', 'institution', 'district', 'nqf_level',
-            'qualification', 'skills', 'status', 'updated_at',
+            'qualification', 'skills', 'status',
+            'race', 'gender', 'disability', 'nationality', 'date_of_birth', 'id_number',
+            'updated_at',
         ]
 
 
@@ -192,3 +219,10 @@ class GapAlertSerializer(serializers.ModelSerializer):
             'id', 'district', 'alert_type', 'learners_ready',
             'learners_placed', 'detail', 'status', 'created_at',
         ]
+
+
+class TenantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tenant
+        fields = ['id', 'name', 'province_code', 'is_active', 'created_by', 'created_at']
+        read_only_fields = ['created_by', 'created_at']

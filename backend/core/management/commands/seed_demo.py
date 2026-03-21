@@ -18,6 +18,8 @@ from core.matching import run_matching_engine_for_learner
 
 
 EMPLOYER_EMAIL    = 'employer@demo.co.za'
+SETA_EMAIL        = 'seta@demo.co.za'
+INCUBATOR_EMAIL   = 'incubator@demo.co.za'
 LEARNER_EMAILS    = [
     'thabo@demo.co.za',
     'naledi@demo.co.za',
@@ -55,6 +57,32 @@ class Command(BaseCommand):
             )
         )
         self.stdout.write(f'  Employer: {emp_user.email}')
+
+        # ── SETA demo user ─────────────────────────────────────────────────────
+        seta_user, _ = User.objects.get_or_create(
+            email=SETA_EMAIL,
+            defaults=dict(
+                password_hash=make_password(PASSWORD),
+                role='SETA',
+                first_name='MERSETA EC',
+                phone='0413456789',
+                account_status='active',
+            )
+        )
+        self.stdout.write(f'  SETA: {seta_user.email}')
+
+        # ── Incubator demo user ────────────────────────────────────────────────
+        incubator_user, _ = User.objects.get_or_create(
+            email=INCUBATOR_EMAIL,
+            defaults=dict(
+                password_hash=make_password(PASSWORD),
+                role='Incubator',
+                first_name='Propella Incubator',
+                phone='0419876543',
+                account_status='active',
+            )
+        )
+        self.stdout.write(f'  Incubator: {incubator_user.email}')
 
         # ── Opportunities ──────────────────────────────────────────────────────
         opps_data = [
@@ -126,6 +154,15 @@ class Command(BaseCommand):
                 qualification='NCV IT',
                 skills=['Networking', 'Windows', 'Hardware', 'CompTIA A+'],
             ),
+            dict(
+                email='vuyo@demo.co.za',
+                first_name='Vuyo Mkhize',
+                phone='0821234567',
+                district='Nelson Mandela Bay',
+                nqf_level='6',
+                qualification='BSc Information Technology',
+                skills=['Python', 'SQL', 'Django', 'Data Analysis', 'Excel', 'Git'],
+            ),
         ]
 
         for ld in learners_data:
@@ -189,5 +226,8 @@ class Command(BaseCommand):
             f'  Learner 1:  thabo@demo.co.za   (NQF 6, Python/SQL/Django)\n'
             f'  Learner 2:  naledi@demo.co.za  (NQF 5, SQL/Excel/Data)\n'
             f'  Learner 3:  sipho@demo.co.za   (NQF 4, Networking/IT)\n'
+            f'  DEMO USER:  vuyo@demo.co.za    (NQF 6, Python/SQL/Django/Data) [USE FOR JUDGES]\n'
             f'  Employer:   employer@demo.co.za\n'
+            f'  SETA:       seta@demo.co.za\n'
+            f'  Incubator:  incubator@demo.co.za\n'
         ))

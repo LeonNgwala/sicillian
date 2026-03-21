@@ -8,8 +8,6 @@ const navLinks = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
   { label: "Solutions", href: "#solutions" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Who It's For", href: "#who" },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -67,10 +65,10 @@ export default function Navbar() {
         {/* CTA */}
         <div className="hidden md:flex items-center gap-3">
           <a
-            href="#contact"
+            href="/login"
             style={{ backgroundImage: "linear-gradient(90deg, #34d399, #22d3ee)" }} className="px-4 py-2 rounded-sm text-slate-900 text-xs font-bold uppercase tracking-wide transition-opacity hover:opacity-90"
           >
-            Get Started
+            login
           </a>
         </div>
 
@@ -105,7 +103,7 @@ export default function Navbar() {
                 </a>
               ))}
               <a
-                href="#contact"
+                href="/login"
                 onClick={() => setMobileOpen(false)}
                 className="mt-2 px-4 py-2 rounded bg-[#34d399] text-white text-sm font-semibold text-center"
               >

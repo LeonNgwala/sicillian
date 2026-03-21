@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import NavigationProgress from "@/components/NavigationProgress";
 
 const geist = Geist({
   variable: "--font-sans",
@@ -22,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} scroll-smooth`}>
       <body className="min-h-screen bg-white text-gray-900 antialiased">
+        <NavigationProgress />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

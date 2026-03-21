@@ -12,6 +12,11 @@ export interface User {
   created_at: string;
 }
 
+export type Race = 'black_african' | 'coloured' | 'indian' | 'asian' | 'white' | 'other' | 'prefer_not_to_say';
+export type Gender = 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
+export type Disability = 'yes' | 'no' | 'prefer_not_to_say';
+export type Nationality = 'south_african' | 'permanent_resident' | 'refugee_permit' | 'other';
+
 export interface LearnerProfile {
   id: number;
   user: number;
@@ -21,6 +26,12 @@ export interface LearnerProfile {
   qualification: string;
   skills: string[];
   status: 'searching' | 'placed' | 'training';
+  race: Race | null;
+  gender: Gender | null;
+  disability: Disability | null;
+  nationality: Nationality | null;
+  date_of_birth: string | null;
+  id_number: string | null;
   updated_at: string;
 }
 
@@ -95,6 +106,12 @@ export interface LearnerRegisterData {
   qualification: string;
   skills: string[];
   institution_id?: number | null;
+  race?: Race | null;
+  gender?: Gender | null;
+  disability?: Disability | null;
+  nationality?: Nationality | null;
+  date_of_birth?: string | null;
+  id_number?: string | null;
 }
 
 export interface OrgRegisterData {

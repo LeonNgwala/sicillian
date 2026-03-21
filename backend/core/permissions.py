@@ -5,7 +5,12 @@ class IsActiveAccount(BasePermission):
     message = 'Your account is pending verification or has been suspended.'
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.account_status == 'active')
+        if not request.user:
+            return False
+        # SuperAdmin bypasses account status checks
+        if request.user.role == 'SuperAdmin':
+            return True
+        return request.user.account_status == 'active'
 
 
 class IsLearner(BasePermission):
@@ -44,11 +49,11 @@ class IsInstitutionOrSETA(BasePermission):
 
 
 class IsSETAOrReadOnly(BasePermission):
-    """SETA full access; Institution/Incubator read-only."""
+    """SETA/SuperAdmin full access; Institution/Incubator read-only."""
     def has_permission(self, request, view):
         if not request.user:
             return False
-        if request.user.role == 'SETA':
+        if request.user.role in ('SETA', 'SuperAdmin'):
             return True
         if request.user.role in ('Institution', 'Incubator') and request.method in SAFE_METHODS:
             return True
@@ -56,13 +61,10 @@ class IsSETAOrReadOnly(BasePermission):
 
 
 class IsOwnerOrSETA(BasePermission):
-    """Object-level: the object's owner or a SETA user."""
+    """Object-level: the object's owner, a SETA user, or a SuperAdmin."""
     def has_object_permission(self, request, view, obj):
-        if request.user.role == 'SETA':
+        if request.user.role in ('SETA', 'SuperAdmin'):
             return True
-        # obj.user  →  User directly on the object
-        # obj.learner → LearnerProfile → .user
-        # obj.employer → User directly
         owner = getattr(obj, 'user', None) \
             or getattr(obj, 'employer', None)
         if owner is None:
@@ -70,3 +72,13 @@ class IsOwnerOrSETA(BasePermission):
             if learner:
                 owner = learner.user
         return owner == request.user
+
+
+class IsSuperAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.role == 'SuperAdmin')
+
+
+class IsSuperAdminOrSETA(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.role in ('SuperAdmin', 'SETA'))

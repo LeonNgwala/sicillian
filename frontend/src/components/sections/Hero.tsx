@@ -212,7 +212,7 @@ export default function Hero() {
             className="flex items-center gap-4"
           >
             <a
-              href="#solutions"
+              href="/login"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-sm text-slate-900 text-sm font-bold transition-opacity duration-200 hover:opacity-90"
               style={{ backgroundImage: "linear-gradient(90deg, #34d399, #22d3ee)" }}
             >

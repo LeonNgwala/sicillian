@@ -7,8 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu, X, LayoutDashboard, Sparkles, Briefcase, UserCircle,
   ClipboardList, Bell, PlusCircle, Users, GraduationCap, BookOpen,
-  Map, Banknote, ShieldCheck, BarChart3, Layers, LucideIcon,
+  Map, Banknote, ShieldCheck, BarChart3, Layers, LogOut, LucideIcon,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 type Role = "learner" | "employer" | "institution" | "seta" | "incubator";
 
@@ -65,6 +66,7 @@ interface SidebarProps {
 export default function Sidebar({ role, userName, userEmail }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { logout } = useAuth();
   const navItems = NAV_CONFIG[role];
 
   const initials = userName
@@ -133,7 +135,7 @@ export default function Sidebar({ role, userName, userEmail }: SidebarProps) {
         </span>
       </div>
 
-      {/* User */}
+      {/* User + logout */}
       <div className="px-5 py-4 border-t border-slate-800 flex items-center gap-3">
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-slate-900 text-xs font-bold shrink-0"
@@ -141,10 +143,17 @@ export default function Sidebar({ role, userName, userEmail }: SidebarProps) {
         >
           {initials}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-white truncate">{userName}</p>
           <p className="text-xs text-slate-500 truncate">{userEmail}</p>
         </div>
+        <button
+          onClick={logout}
+          title="Sign out"
+          className="text-slate-500 hover:text-red-400 transition-colors shrink-0"
+        >
+          <LogOut size={16} />
+        </button>
       </div>
     </div>
   );

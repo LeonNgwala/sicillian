@@ -8,6 +8,7 @@ class User(models.Model):
         ('Institution', 'Institution'),
         ('Incubator', 'Incubator'),
         ('SETA', 'SETA'),
+        ('SuperAdmin', 'SuperAdmin'),
     ]
     ACCOUNT_STATUS_CHOICES = [
         ('active', 'Active'),
@@ -23,7 +24,17 @@ class User(models.Model):
     account_status = models.CharField(
         max_length=20, choices=ACCOUNT_STATUS_CHOICES, default='active'
     )
+    province = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Required by DRF's IsAuthenticated permission check
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
 
     def __str__(self):
         return f"{self.email} ({self.role})"
@@ -77,6 +88,32 @@ class LearnerProfile(models.Model):
         ('placed', 'Placed'),
         ('training', 'Training'),
     ]
+    RACE_CHOICES = [
+        ('black_african', 'Black African'),
+        ('coloured', 'Coloured'),
+        ('indian', 'Indian'),
+        ('asian', 'Asian'),
+        ('white', 'White'),
+        ('other', 'Other'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+    ]
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('non_binary', 'Non-binary'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+    ]
+    DISABILITY_CHOICES = [
+        ('yes', 'Yes'),
+        ('no', 'No'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+    ]
+    NATIONALITY_CHOICES = [
+        ('south_african', 'South African'),
+        ('permanent_resident', 'Permanent Resident'),
+        ('refugee_permit', 'Refugee/Asylum Permit'),
+        ('other', 'Other'),
+    ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='learner_profile')
     institution = models.ForeignKey(
@@ -87,6 +124,15 @@ class LearnerProfile(models.Model):
     qualification = models.CharField(max_length=100)
     skills = models.JSONField(default=list)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='searching')
+
+    # B-BBEE / demographics
+    race        = models.CharField(max_length=20,  choices=RACE_CHOICES,        null=True, blank=True)
+    gender      = models.CharField(max_length=20,  choices=GENDER_CHOICES,      null=True, blank=True)
+    disability  = models.CharField(max_length=20,  choices=DISABILITY_CHOICES,  null=True, blank=True)
+    nationality = models.CharField(max_length=25,  choices=NATIONALITY_CHOICES, null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    id_number   = models.CharField(max_length=20, null=True, blank=True)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -170,3 +216,17 @@ class GapAlert(models.Model):
     detail = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Tenant(models.Model):
+    name = models.CharField(max_length=100)
+    province_code = models.CharField(max_length=10, unique=True)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='created_tenants',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.province_code})"
